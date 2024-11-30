@@ -10,6 +10,7 @@ std::string crc32ToHex(uint32_t crc);
 void EnableANSIColors(bool value);
 void ClearLastLines(int num_lines);
 void MoveCursorDown(int lines);
+std::string CleanString(const std::string& str);
 
 std::wstring stringToWString(const std::string& str);
 std::string GetHWID();
@@ -29,4 +30,5 @@ bool SetRegistryDwordValue(HKEY hKeyRoot, const std::string& subKey, const std::
 
 std::string base64_encode(const std::string& input);
 std::string base64_decode(const std::string& input);
+static uint32_t hash_string(const char* s);
 #endif // BLIB_H
