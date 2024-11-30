@@ -54,4 +54,4 @@ extern std::vector<std::string> BaseBoardInformation; // use for analysis
 extern std::string BaseBoardSerial; // use for hardware locking
 extern std::vector<std::string> PhysicalMemoryInformation; // use for analysis
 extern std::vector<std::string> PhysicalMemorySerials; // use for hardware locking
-void InitSMBIOS();
+void GetBIOSInfo();

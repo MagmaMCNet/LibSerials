@@ -10,6 +10,10 @@
 #include <map>
 #include "HardwareInfo.h"
 #include <iomanip>
+#include <windows.h>
+#include "SMBIOS.h"
+#pragma warning(push)
+#pragma warning(disable: 4996)
 
 static void WriteFile(const std::string& filename, const std::string& data) {
     std::ofstream out(filename, std::ios::binary);
@@ -35,16 +39,72 @@ static std::string ReadFile(const std::string& filename) {
     return std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 }
 
+static uint32_t hash_string(const char* s)
+{
+    uint32_t hash = 0;
+
+    for (; *s; ++s)
+    {
+        hash += *s;
+        hash += (hash << 10);
+        hash ^= (hash >> 6);
+    }
+
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
+    hash += (hash << 15);
+
+    return hash;
+}
+
+
+typedef NTSTATUS(WINAPI* RtlGetVersionPtr)(PRTL_OSVERSIONINFOW);
+
+std::string GetWindowsVersion() {
+    HMODULE hModule = GetModuleHandleW(L"ntdll.dll");
+    if (hModule) {
+        RtlGetVersionPtr rtlGetVersion = (RtlGetVersionPtr)GetProcAddress(hModule, "RtlGetVersion");
+        if (rtlGetVersion) {
+            RTL_OSVERSIONINFOW osInfo = { 0 };
+            osInfo.dwOSVersionInfoSize = sizeof(osInfo);
+            if (rtlGetVersion(&osInfo) != 0)
+                return "Unknown Windows Version";
+
+            if (osInfo.dwMajorVersion != 10)
+                return "Unknown Windows Version";
+
+            if (osInfo.dwBuildNumber >= 22000)
+                return "Windows 11";
+            else
+                return "Windows 10";
+        }
+    }
+    return "Unable to determine Windows version";
+}
+
+std::string CleanString(const std::string& str) {
+    std::string result = str;
+    result.erase(std::remove(result.begin(), result.end(), '\0'), result.end());
+    result.erase(result.find_last_not_of(" \r\n") + 1);
+    result.erase(0, result.find_first_not_of(" \r\n"));
+    return result;
+}
+
 
 extern "C" __declspec(dllexport) void GenerateSerials() {
+    GetBIOSInfo();
+    std::cout << "-- Motherboard --" << std::endl;
+    std::cout << "[Manufacturer] " << BaseBoardInformation.at(0) << std::endl;
+    std::cout << "[Product]      " << BaseBoardInformation.at(1) << std::endl;
+    std::cout << "[Serial]       " << BaseBoardInformation.at(2) << std::endl;
     std::cout << "-- CPU --" << std::endl;
     std::cout << HardwareInfo::GetCPU() << std::endl;
     std::cout << "-- GPU --" << std::endl;
     std::cout << HardwareInfo::GetGPU() << std::endl;
     std::cout << "-- Mac Addresses --" << std::endl;
-    std::vector<std::string> macaddresses = HardwareInfo::GetMacAddresses();
-    for (size_t i = 0; i < macaddresses.size(); i++)
-        std::cout << "[" + std::to_string(i) + "] " + macaddresses.at(i) << std::endl;
+    std::vector<std::string> MacAddresses = HardwareInfo::GetMacAddresses();
+    for (size_t i = 0; i < MacAddresses.size(); i++)
+        std::cout << "[" + std::to_string(i) + "] " + MacAddresses.at(i) << std::endl;
     std::cout << "-- Memory --" << std::endl;
     double totalMemory = HardwareInfo::GetTotalMemory() / 1024.0;
     std::cout << "Total Memory Count: "
@@ -54,7 +114,32 @@ extern "C" __declspec(dllexport) void GenerateSerials() {
     std::vector<std::string> DriveSerials = HardwareInfo::GetDriveSerialNumbers();
     for (size_t i = 0; i < DriveSerials.size(); i++)
         std::cout << "[" + std::to_string(i) + "] " + DriveSerials.at(i) << std::endl;
+    SerialReader Reader("");
+    Reader.WriteRow("Manufacturer", CleanString(BaseBoardInformation.at(0)));
+    Reader.WriteRow("Motherboard",  CleanString(BaseBoardInformation.at(1)));
+    Reader.WriteRow("BaseSerial",   CleanString(BaseBoardInformation.at(2)));
+    Reader.WriteRow("CPU",          CleanString(HardwareInfo::GetCPU()));
+    Reader.WriteRow("MacAddress",   CleanString(MacAddresses.at(0)));
+    Reader.WriteRow("DriveSerial",  CleanString(DriveSerials.at(0)));
+    Reader.WriteRow("Version",      CleanString(GetWindowsVersion()));
 
+    std::ostringstream* oss = new std::ostringstream;
+    *oss << std::fixed << std::setprecision(0) << totalMemory;
+    Reader.WriteRow("TotalMemory", oss->str() + "GB");
+    delete oss;
+
+    std::string MemorySerial;
+    for (const auto& serial : PhysicalMemorySerials)
+        MemorySerial += serial;
+    Reader.WriteRow("MemorySerial", std::to_string(hash_string(MemorySerial.c_str())));
+
+    std::cout << "\n\033[1;35m[Exported Data] \033[1;37m\n\033[1;34m---------------------------\033[0m" << std::endl;
+    std::string value;
+
+    for (const auto& [name, value] : Reader.GetRows())
+        std::cout << Reader.FormatRow("[" + name + "]", value) << std::endl;
+
+    WriteFile(SERIALFILE, EXText::encrypt(Reader.Export(), PASSWORD));
 }
 
 extern "C" __declspec(dllexport) std::string ReadSavedSerials() {

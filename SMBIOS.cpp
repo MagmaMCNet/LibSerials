@@ -136,11 +136,9 @@ void ConvertData(RawSMBIOSData* rawdata, int id)
 		break;
 	}
 }
-void InitSMBIOS()
+void GetBIOSInfo()
 {
 	std::vector<SMBIOSStruct*> structureTable = GetStructureTable(GetRawData());
 	for (int i = 0; i < structureTable.size(); ++i)
-	{
 		ConvertData(GetRawData(), i);
-	}
 }
