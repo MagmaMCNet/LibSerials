@@ -6,6 +6,8 @@
 #include "SerialReader.h"
 #include "BLib.h"
 #include "AssignedSerial.h"
+#include <functional>
+#include <map>
 
 static void WriteFile(const std::string& filename, const std::string& data) {
     std::ofstream out(filename, std::ios::binary);
@@ -30,22 +32,6 @@ static std::string ReadFile(const std::string& filename) {
     return std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 }
 
-int main() {
-    try {
-        std::cout << "Reading Data... main" << std::endl;
-        std::string encryptedData = ReadFile(SERIALFILE);
-
-        std::string decryptedData = EXText::decrypt(encryptedData, PASSWORD);
-        std::cout << "Decrypted Data: " << decryptedData << std::endl;
-
-        std::cout << "Exit..." << std::endl;
-    }
-    catch (const std::exception& ex) {
-        std::cerr << "Error: " << ex.what() << std::endl;
-    }
-
-    return 0;
-}
 
 extern "C" __declspec(dllexport) void GenerateSerials() {
 
@@ -61,19 +47,13 @@ extern "C" __declspec(dllexport) std::string ReadSavedSerials() {
 }
 
 extern "C" __declspec(dllexport) void ViewSavedSerials() {
-    allocateConsole();
     SerialReader Reader(EXText::decrypt(ReadFile(SERIALFILE), PASSWORD));
     for (const auto& [name, value] : Reader.GetRows())
         std::cout << Reader.FormatRow("[" + name + "]", value) << std::endl;
-
-    std::cout << "\n\033[1;33mPress Enter to exit...\033[0m" << std::endl;
-    std::cin.ignore();
 }
 
 #ifdef TRUE || DEBUG
 extern "C" __declspec(dllexport) void ViewExampleSerials() {
-    allocateConsole();
-
     std::string data = "[Serial] 17267\n[Motherboard] B5000-Ligma\n[Manufacture] Ligma Inc\n[OS] Windows 10";
     SerialReader reader(data);
 
@@ -85,45 +65,95 @@ extern "C" __declspec(dllexport) void ViewExampleSerials() {
     std::cout << "\n\033[1;35m[Exported Data] \033[1;37m\n\033[1;34m-------------------------\033[0m" << std::endl;
     std::cout << reader.Export() << std::endl;
     WriteFile(SERIALFILE+"_Debug", EXText::encrypt(reader.Export(), PASSWORD));
-    std::cout << "\n\033[1;33mPress Enter to exit...\033[0m";
-    std::cin.ignore();
-
     return;
 }
 extern "C" __declspec(dllexport) void Lib_Encrypt() {
-    allocateConsole();
-    std::cout << "[DEBUG MODE]" << std::endl;
+    std::cout << "\033[1;36m[DEBUG MODE]\033[0m" << std::endl;
     try {
-        std::cout << "Reading Data..." << std::endl;
+        std::cout << "\033[1;33mReading Data...\033[0m" << std::endl;
         std::string fileContent = ReadFile(SERIALFILE);
-        std::string encryptedData = EXText::encrypt(fileContent, PASSWORD);
-        WriteFile(SERIALFILE+"_encrypted", encryptedData);
 
-        std::cout << "Encryption Complete. Encrypted file saved as SERIALFILE_encrypted." << std::endl;
+        if (EXText::isEncrypted(fileContent))
+            std::cout << "\033[1;31mError:\033[0m The file is already encrypted.\n" << std::endl;
+        else {
+            std::cout << "\033[1;32mEncrypting...\033[0m" << std::endl;
+            std::string encryptedData = EXText::encrypt(fileContent, PASSWORD);
+            WriteFile(SERIALFILE, encryptedData);
+            std::cout << "\033[1;32mEncryption Complete.\033[0m Encrypted file saved as \033[1;36m" << SERIALFILE << "\033[0m." << std::endl;
+        }
     }
     catch (const std::exception& ex) {
-        std::cerr << "Error: " << ex.what() << std::endl;
+        std::cerr << "\033[1;31mError:\033[0m " << ex.what() << std::endl;
     }
-    system("pause");
 }
 
 extern "C" __declspec(dllexport) void Lib_Decrypt() {
-    allocateConsole();
+    std::cout << "\033[1;36m[DEBUG MODE]\033[0m" << std::endl;
     try {
-        std::cout << "[DEBUG MODE]" << std::endl;
-        std::cout << "Reading Data..." << std::endl;
-        std::string encryptedData = ReadFile(SERIALFILE+"_encrypted");
-        std::string decryptedData = EXText::decrypt(encryptedData, PASSWORD);
-        WriteFile(SERIALFILE+"_decrypted", decryptedData);
+        std::cout << "\033[1;33mReading Data...\033[0m" << std::endl;
+        std::string fileContent = ReadFile(SERIALFILE);
 
-        std::cout << "Decryption Complete. Decrypted file saved as SERIALFILE." << std::endl;
+        if (!EXText::isEncrypted(fileContent))
+            std::cout << "\033[1;31mError:\033[0m The file is not encrypted.\n" << std::endl;
+        else {
+            std::cout << "\033[1;32mDecrypting...\033[0m" << std::endl;
+            std::string decryptedData = EXText::decrypt(fileContent, PASSWORD);
+            WriteFile(SERIALFILE, decryptedData);
+            std::cout << "\033[1;32mDecryption Complete.\033[0m Decrypted file saved as \033[1;36m" << SERIALFILE << "\033[0m." << std::endl;
+        }
     }
     catch (const std::exception& ex) {
-        std::cerr << "Error: " << ex.what() << std::endl;
+        std::cerr << "\033[1;31mError:\033[0m " << ex.what() << std::endl;
     }
-    system("pause");
 }
+extern "C" __declspec(dllexport) void DebugUI() {
+    allocateConsole();
+    SetConsoleTitleA("Debug UI");
+
+    // Map of function names to callable functions
+    std::map<int, std::function<void()>> functionMap;
+
+    // Bind functions to the map
+    functionMap[1] = GenerateSerials;
+    functionMap[2] = ViewSavedSerials;
+    functionMap[3] = ViewExampleSerials;
+    functionMap[4] = Lib_Encrypt;
+    functionMap[5] = Lib_Decrypt;
+
+    bool running = true;
+
+    while (running) {
+        std::cout << "\n\033[1;36m--- Debug UI ---\033[0m\n";
+        std::cout << "1. Generate Serial\n";
+        std::cout << "2. View Saved Serials\n";
+        std::cout << "3. View Example Serials\n";
+        std::cout << "4. Encrypt File\n";
+        std::cout << "5. Decrypt File\n";
+        std::cout << "0. Exit\n";
+        std::cout << "Choose an option: ";
+
+        int choice;
+        std::cin >> choice;
+
+        if (choice == 0) {
+            std::cout << "Exiting Debug UI..." << std::endl;
+            running = false;
+        }
+        else if (functionMap.find(choice) != functionMap.end()) {
+            system("cls");
+            functionMap[choice]();
+            std::cout << "\n\033[1;33mPress Enter to exit...\033[0m";
+            system("pause >nul");
+            system("cls");
+        }
+        else {
+            std::cout << "\033[1;31mInvalid choice. Please try again.\033[0m" << std::endl;
+        }
+    }
+}
+
 #else
+extern "C" __declspec(dllexport) void DebugUI();
 extern "C" __declspec(dllexport) void Lib_Encrypt();
 extern "C" __declspec(dllexport) void Lib_Decrypt();
 #endif

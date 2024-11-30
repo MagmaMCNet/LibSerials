@@ -98,3 +98,11 @@ std::string EXText::decrypt(const std::string& EncryptedText, const std::string&
     auto DecryptedAES = AESDecrypt(XORData, Key);
     return gzipDecompress(DecryptedAES);
 }
+
+bool EXText::isEncrypted(const std::string& data) {
+    for (char c : data) {
+        if (static_cast<unsigned char>(c) < 32 || static_cast<unsigned char>(c) > 126)
+            return (c != '\n' && c != '\r');
+    }
+    return false;
+}
