@@ -6,10 +6,11 @@
 #include <fstream>
 #include <Wbemidl.h>
 #include <comdef.h>
-#include <windows.h>
 #include <psapi.h>
 #include <tchar.h> 
+#ifdef BLIB_CURL
 #include <curl/curl.h>
+#endif // BLIB_CURL
 
 #pragma comment(lib, "wbemuuid.lib")
 #define WIN32_LEAN_AND_MEAN
@@ -314,6 +315,7 @@ void EndProcess(const std::string& programName) {
     }
 }
 
+#ifdef BLIB_CURL
 size_t CurlWriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
     if (userp) {
         std::string* response_string = static_cast<std::string*>(userp);
@@ -348,6 +350,7 @@ std::string performHTTPRequest(const std::string& url, const std::string& reques
     curl_easy_cleanup(curl);
     return readBuffer;
 }
+#endif
 bool SetRegistryDwordValue(HKEY hKeyRoot, const std::string& subKey, const std::string& valueName, DWORD value)
 {
     HKEY hKey;

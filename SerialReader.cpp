@@ -56,6 +56,10 @@ bool SerialReader::ReadRow(const std::string& row, std::string& value) {
     return false;
 }
 
+const std::unordered_map<std::string, std::string>& SerialReader::GetRows() {
+    return data_map;
+}
+
 std::string SerialReader::Export() const {
     std::ostringstream export_stream;
     for (const auto& entry : data_map) {

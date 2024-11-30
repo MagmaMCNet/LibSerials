@@ -33,7 +33,7 @@ static std::string ReadFile(const std::string& filename) {
 int main() {
     try {
         std::cout << "Reading Data... main" << std::endl;
-        std::string encryptedData = ReadFile("HWID");
+        std::string encryptedData = ReadFile(SERIALFILE);
 
         std::string decryptedData = EXText::decrypt(encryptedData, PASSWORD);
         std::cout << "Decrypted Data: " << decryptedData << std::endl;
@@ -51,62 +51,55 @@ extern "C" __declspec(dllexport) void GenerateSerials() {
 
 }
 
-extern "C" __declspec(dllexport) void ReadExampleSerial() {
+extern "C" __declspec(dllexport) std::string ReadSavedSerials() {
+    try {
+        std::string FileData = ReadFile(SERIALFILE);
+        return EXText::decrypt(FileData, PASSWORD);
+    }
+    catch (...) {}
+    return "[NULL]";
+}
+
+extern "C" __declspec(dllexport) void ViewSavedSerials() {
+    allocateConsole();
+    SerialReader Reader(EXText::decrypt(ReadFile(SERIALFILE), PASSWORD));
+    for (const auto& [name, value] : Reader.GetRows())
+        std::cout << Reader.FormatRow("[" + name + "]", value) << std::endl;
+
+    std::cout << "\n\033[1;33mPress Enter to exit...\033[0m" << std::endl;
+    std::cin.ignore();
+}
+
+#ifdef TRUE || DEBUG
+extern "C" __declspec(dllexport) void ViewExampleSerials() {
     allocateConsole();
 
     std::string data = "[Serial] 17267\n[Motherboard] B5000-Ligma\n[Manufacture] Ligma Inc\n[OS] Windows 10";
     SerialReader reader(data);
 
     std::string value;
-    if (reader.ReadRow("Serial", value))
-        std::cout << reader.FormatRow("[Serial]", value) << std::endl;
 
-    if (reader.ReadRow("Motherboard", value))
-        std::cout << reader.FormatRow("[Motherboard]", value) << std::endl;
-
-    if (reader.ReadRow("Manufacture", value))
-        std::cout << reader.FormatRow("[Manufacture]", value) << std::endl;
-
-    if (reader.ReadRow("OS", value))
-        std::cout << reader.FormatRow("[OS]", value) << std::endl;
+    for (const auto& [name, value] : reader.GetRows())
+        std::cout << reader.FormatRow("[" + name + "]", value) << std::endl;
 
     std::cout << "\n\033[1;35m[Exported Data] \033[1;37m\n\033[1;34m-------------------------\033[0m" << std::endl;
     std::cout << reader.Export() << std::endl;
+    WriteFile(SERIALFILE+"_Debug", EXText::encrypt(reader.Export(), PASSWORD));
     std::cout << "\n\033[1;33mPress Enter to exit...\033[0m";
     std::cin.ignore();
 
     return;
 }
-
-extern "C" __declspec(dllexport) std::string ReadSavedSerials() {
-    try {
-        std::string FileData = ReadFile("HWID");
-        return EXText::decrypt(FileData, PASSWORD);
-    }
-    catch (...) {}
-    return "[NULL]";
-}
-extern "C" __declspec(dllexport) std::string ViewSavedSerials() {
-    allocateConsole();
-    try {
-        std::string FileData = ReadFile("HWID");
-        std::cout << EXText::decrypt(FileData, PASSWORD) << std::endl;
-        std::cin.ignore();
-    }
-    catch (...) {}
-    return "[NULL]";
-}
-#ifdef _DEBUG
 extern "C" __declspec(dllexport) void Lib_Encrypt() {
     allocateConsole();
     std::cout << "[DEBUG MODE]" << std::endl;
     try {
         std::cout << "Reading Data..." << std::endl;
-        std::string fileContent = ReadFile("HWID");
+        std::string fileContent = ReadFile(SERIALFILE);
         std::string encryptedData = EXText::encrypt(fileContent, PASSWORD);
-        WriteFile("HWID_encrypted", encryptedData);
+        WriteFile(SERIALFILE+"_encrypted", encryptedData);
 
-        std::cout << "Encryption Complete. Encrypted file saved as HWID_encrypted." << std::endl;
+        std::cout << "Encryption Complete. Encrypted file saved as SERIALFILE_encrypted." << std::endl;
     }
     catch (const std::exception& ex) {
         std::cerr << "Error: " << ex.what() << std::endl;
@@ -119,11 +112,11 @@ extern "C" __declspec(dllexport) void Lib_Decrypt() {
     try {
         std::cout << "[DEBUG MODE]" << std::endl;
         std::cout << "Reading Data..." << std::endl;
-        std::string encryptedData = ReadFile("HWID_encrypted");
+        std::string encryptedData = ReadFile(SERIALFILE+"_encrypted");
         std::string decryptedData = EXText::decrypt(encryptedData, PASSWORD);
-        WriteFile("HWID_decrypted", decryptedData);
+        WriteFile(SERIALFILE+"_decrypted", decryptedData);
 
-        std::cout << "Decryption Complete. Decrypted file saved as HWID_decrypted." << std::endl;
+        std::cout << "Decryption Complete. Decrypted file saved as SERIALFILE." << std::endl;
     }
     catch (const std::exception& ex) {
         std::cerr << "Error: " << ex.what() << std::endl;

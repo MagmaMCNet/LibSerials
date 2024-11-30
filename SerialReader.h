@@ -12,6 +12,7 @@ public:
     std::string FormatRow(const std::string& title, const std::string& value);
     bool WriteRow(const std::string& row, const std::string& value);
     bool ReadRow(const std::string& row, std::string& value);
+    const std::unordered_map<std::string, std::string>& GetRows();
     std::string Export() const;
 
 private:
