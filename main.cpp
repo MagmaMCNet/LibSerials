@@ -8,6 +8,8 @@
 #include "AssignedSerial.h"
 #include <functional>
 #include <map>
+#include "HardwareInfo.h"
+#include <iomanip>
 
 static void WriteFile(const std::string& filename, const std::string& data) {
     std::ofstream out(filename, std::ios::binary);
@@ -35,6 +37,23 @@ static std::string ReadFile(const std::string& filename) {
 
 
 extern "C" __declspec(dllexport) void GenerateSerials() {
+    std::cout << "-- CPU --" << std::endl;
+    std::cout << HardwareInfo::GetCPU() << std::endl;
+    std::cout << "-- GPU --" << std::endl;
+    std::cout << HardwareInfo::GetGPU() << std::endl;
+    std::cout << "-- Mac Addresses --" << std::endl;
+    std::vector<std::string> macaddresses = HardwareInfo::GetMacAddresses();
+    for (size_t i = 0; i < macaddresses.size(); i++)
+        std::cout << "[" + std::to_string(i) + "] " + macaddresses.at(i) << std::endl;
+    std::cout << "-- Memory --" << std::endl;
+    double totalMemory = HardwareInfo::GetTotalMemory() / 1024.0;
+    std::cout << "Total Memory Count: "
+        << std::fixed << std::setprecision(1)
+        << totalMemory << "GB" << std::endl;
+    std::cout << "-- Drives --" << std::endl;
+    std::vector<std::string> DriveSerials = HardwareInfo::GetDriveSerialNumbers();
+    for (size_t i = 0; i < DriveSerials.size(); i++)
+        std::cout << "[" + std::to_string(i) + "] " + DriveSerials.at(i) << std::endl;
 
 }
 

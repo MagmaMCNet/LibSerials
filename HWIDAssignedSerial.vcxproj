@@ -162,12 +162,17 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="EXText.cpp" />
     <ClCompile Include="SerialReader.cpp" />
+    <ClCompile Include="SMBIOS.cpp" />
+    <ClCompile Include="WCharHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AssignedSerial.h" />
     <ClInclude Include="BLib.h" />
     <ClInclude Include="EXText.h" />
+    <ClInclude Include="HardwareInfo.h" />
     <ClInclude Include="SerialReader.h" />
+    <ClInclude Include="SMBIOS.h" />
+    <ClInclude Include="WCharHelper.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
