@@ -161,6 +161,7 @@
     <ClCompile Include="SerialReader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AssignedSerial.h" />
     <ClInclude Include="BLib.h" />
     <ClInclude Include="EXText.h" />
     <ClInclude Include="SerialReader.h" />

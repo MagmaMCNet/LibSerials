@@ -53,7 +53,7 @@ std::string EXText::OperateXOR(const std::string& data, const std::string& key) 
     return result;
 }
 
-std::string EXText::aesEncrypt(const std::string& data, const std::string& key) {
+std::string EXText::AESEncrypt(const std::string& data, const std::string& key) {
     EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
     if (!ctx) throw std::runtime_error("Failed to create AES context");
 
@@ -70,7 +70,7 @@ std::string EXText::aesEncrypt(const std::string& data, const std::string& key) 
     EVP_CIPHER_CTX_free(ctx);
     return std::string(reinterpret_cast<char*>(encrypted.data()), totalLen);
 }
-std::string EXText::aesDecrypt(const std::string& data, const std::string& key) {
+std::string EXText::AESDecrypt(const std::string& data, const std::string& key) {
     EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
     if (!ctx) throw std::runtime_error("Failed to create AES context");
 
@@ -90,11 +90,11 @@ std::string EXText::aesDecrypt(const std::string& data, const std::string& key) 
 
 std::string EXText::encrypt(const std::string& Text, const std::string& Key) {
     auto Compressed = gzipCompress(Text);
-    auto AESData = aesEncrypt(Compressed, Key);
+    auto AESData = AESEncrypt(Compressed, Key);
     return OperateXOR(AESData, Key);
 }
 std::string EXText::decrypt(const std::string& EncryptedText, const std::string& Key) {
     auto XORData = OperateXOR(EncryptedText, Key);
-    auto DecryptedAES = aesDecrypt(XORData, Key);
+    auto DecryptedAES = AESDecrypt(XORData, Key);
     return gzipDecompress(DecryptedAES);
 }

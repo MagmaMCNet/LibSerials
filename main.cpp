@@ -5,10 +5,9 @@
 #include <Windows.h>
 #include "SerialReader.h"
 #include "BLib.h"
+#include "AssignedSerial.h"
 
-const std::string PASSWORD = "AssignedSerial";
-
-void WriteFile(const std::string& filename, const std::string& data) {
+static void WriteFile(const std::string& filename, const std::string& data) {
     std::ofstream out(filename, std::ios::binary);
     if (out.is_open()) {
         out.write(data.data(), data.size());
@@ -16,14 +15,15 @@ void WriteFile(const std::string& filename, const std::string& data) {
     }
 }
 
-void allocateConsole() {
+static void allocateConsole() {
     AllocConsole();
     FILE* fp;
     freopen_s(&fp, "CONOUT$", "w", stdout);
     freopen_s(&fp, "CONIN$", "r", stdin);
+    EnableANSIColors(true);
 }
 
-std::string ReadFile(const std::string& filename) {
+static std::string ReadFile(const std::string& filename) {
     std::ifstream file(filename, std::ios::binary);
     if (!file.is_open())
         throw std::runtime_error("Failed to open file: " + filename);
@@ -53,58 +53,32 @@ extern "C" __declspec(dllexport) void GenerateSerials() {
 
 extern "C" __declspec(dllexport) void ReadExampleSerial() {
     allocateConsole();
-    EnableANSIColors(true);
 
-    std::string data = "[Serial] 17267\n[Motherboard] B5000-Ligma\n[Manufacture] Ligma Inc";
+    std::string data = "[Serial] 17267\n[Motherboard] B5000-Ligma\n[Manufacture] Ligma Inc\n[OS] Windows 10";
     SerialReader reader(data);
 
-    reader.WriteRow("OS", "Windows 10");
-
     std::string value;
-    size_t maxLength = 0;
-
     if (reader.ReadRow("Serial", value))
-        maxLength = max(maxLength, size_t(strlen("[Serial]")));
+        std::cout << reader.FormatRow("[Serial]", value) << std::endl;
 
     if (reader.ReadRow("Motherboard", value))
-        maxLength = max(maxLength, size_t(strlen("[Motherboard]")));
+        std::cout << reader.FormatRow("[Motherboard]", value) << std::endl;
 
     if (reader.ReadRow("Manufacture", value))
-        maxLength = max(maxLength, size_t(strlen("[Manufacture]")));
+        std::cout << reader.FormatRow("[Manufacture]", value) << std::endl;
 
     if (reader.ReadRow("OS", value))
-        maxLength = max(maxLength, size_t(strlen("[OS]")));
-
-    // Stylish output formatting
-    auto formatWithPadding = [&maxLength](const std::string& title, const std::string& value) {
-        size_t titleLength = title.length();
-        size_t padding = maxLength - titleLength;
-        std::string paddedTitle = title + std::string(padding, ' ');  // Add spaces to align
-        return "\033[1;36m" + paddedTitle + "\033[1;37m \t" + value;
-        };
-
-    if (reader.ReadRow("Serial", value))
-        std::cout << formatWithPadding("[Serial]", value) << std::endl;
-
-    if (reader.ReadRow("Motherboard", value))
-        std::cout << formatWithPadding("[Motherboard]", value) << std::endl;
-
-    if (reader.ReadRow("Manufacture", value))
-        std::cout << formatWithPadding("[Manufacture]", value) << std::endl;
-
-    if (reader.ReadRow("OS", value))
-        std::cout << formatWithPadding("[OS]", value) << std::endl;
+        std::cout << reader.FormatRow("[OS]", value) << std::endl;
 
     std::cout << "\n\033[1;35m[Exported Data] \033[1;37m\n\033[1;34m-------------------------\033[0m" << std::endl;
     std::cout << reader.Export() << std::endl;
-
     std::cout << "\n\033[1;33mPress Enter to exit...\033[0m";
     std::cin.ignore();
 
     return;
 }
 
-extern "C" __declspec(dllexport) std::string ReadSavedSerial() {
+extern "C" __declspec(dllexport) std::string ReadSavedSerials() {
     try {
         std::string FileData = ReadFile("HWID");
         return EXText::decrypt(FileData, PASSWORD);
@@ -112,7 +86,7 @@ extern "C" __declspec(dllexport) std::string ReadSavedSerial() {
     catch (...) {}
     return "[NULL]";
 }
-extern "C" __declspec(dllexport) std::string Lib_ViewSavedSerial() {
+extern "C" __declspec(dllexport) std::string ViewSavedSerials() {
     allocateConsole();
     try {
         std::string FileData = ReadFile("HWID");

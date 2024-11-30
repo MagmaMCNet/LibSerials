@@ -8,6 +8,8 @@
 class SerialReader {
 public:
     SerialReader(const std::string& data);
+    size_t GetLinePadding();
+    std::string FormatRow(const std::string& title, const std::string& value);
     bool WriteRow(const std::string& row, const std::string& value);
     bool ReadRow(const std::string& row, std::string& value);
     std::string Export() const;

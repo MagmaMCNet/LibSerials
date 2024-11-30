@@ -1,6 +1,4 @@
-#ifndef EXTEXT_H
-#define EXTEXT_H
-
+#pragma once
 #include <string>
 #include <vector>
 
@@ -13,8 +11,6 @@ private:
     static std::string gzipCompress(const std::string& data);
     static std::string gzipDecompress(const std::string& data);
     static std::string OperateXOR(const std::string& data, const std::string& key);
-    static std::string aesEncrypt(const std::string& data, const std::string& key);
-    static std::string aesDecrypt(const std::string& data, const std::string& key);
+    static std::string AESEncrypt(const std::string& data, const std::string& key);
+    static std::string AESDecrypt(const std::string& data, const std::string& key);
 };
-
-#endif

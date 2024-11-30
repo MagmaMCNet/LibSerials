@@ -41,5 +41,8 @@
     <ClInclude Include="BLib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AssignedSerial.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

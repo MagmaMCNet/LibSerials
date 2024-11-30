@@ -26,6 +26,22 @@ SerialReader::SerialReader(const std::string& data) {
     }
 }
 
+size_t SerialReader::GetLinePadding() {
+    size_t maxLength = 0;
+    for (const auto& pair : data_map)
+        maxLength = std::max(maxLength, pair.first.length());
+    return maxLength + 2; // count for [,]
+}
+
+std::string SerialReader::FormatRow(const std::string& title, const std::string& value) {
+    size_t titleLength = title.length();
+    size_t MaxPadding = GetLinePadding();
+    size_t padding = (MaxPadding > titleLength) ? (MaxPadding - titleLength) : 0;
+    std::string paddedTitle = title + std::string(padding, ' ');
+    return "\033[1;36m" + paddedTitle + "\033[1;37m  " + value;
+}
+
+
 bool SerialReader::WriteRow(const std::string& row, const std::string& value) {
     data_map[row] = value;
     return true;
@@ -61,7 +77,7 @@ std::string SerialReader::TrimLineEndings(const std::string& str) {
 
 std::string SerialReader::RemoveBrackets(const std::string& str) {
     if (str.front() == '[' && str.back() == ']') {
-        return str.substr(1, str.size() - 2);  // Remove the brackets
+        return str.substr(1, str.size() - 2);
     }
     return str;
 }
