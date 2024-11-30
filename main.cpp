@@ -18,17 +18,18 @@ static void WriteFile(const std::string& filename, const std::string& data) {
 }
 
 static void allocateConsole() {
-    AllocConsole();
-    FILE* fp;
-    freopen_s(&fp, "CONOUT$", "w", stdout);
-    freopen_s(&fp, "CONIN$", "r", stdin);
+    if (AllocConsole()) {
+        FILE* fp;
+        freopen_s(&fp, "CONOUT$", "w", stdout);
+        freopen_s(&fp, "CONIN$", "r", stdin);
+    }
     EnableANSIColors(true);
 }
 
 static std::string ReadFile(const std::string& filename) {
     std::ifstream file(filename, std::ios::binary);
     if (!file.is_open())
-        throw std::runtime_error("Failed to open file: " + filename);
+        return "";
     return std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 }
 
@@ -151,7 +152,9 @@ extern "C" __declspec(dllexport) void DebugUI() {
         }
     }
 }
-
+void main() {
+    DebugUI();
+}
 #else
 extern "C" __declspec(dllexport) void DebugUI();
 extern "C" __declspec(dllexport) void Lib_Encrypt();
