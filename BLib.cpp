@@ -411,7 +411,7 @@ std::string base64_decode(const std::string& input) {
     }
     return output;
 }
-static uint32_t hash_string(const char* s)
+uint32_t hash_string(const char* s)
 {
     uint32_t hash = 0;
 

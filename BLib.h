@@ -30,5 +30,5 @@ bool SetRegistryDwordValue(HKEY hKeyRoot, const std::string& subKey, const std::
 
 std::string base64_encode(const std::string& input);
 std::string base64_decode(const std::string& input);
-static uint32_t hash_string(const char* s);
+uint32_t hash_string(const char* s);
 #endif // BLIB_H

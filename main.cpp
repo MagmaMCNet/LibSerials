@@ -36,7 +36,10 @@ static std::string ReadFile(const std::string& filename) {
         return "";
     return std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 }
-
+static bool FileExists(const std::string& filename) {
+    std::ifstream file(filename);
+    return file.good();
+}
 
 typedef NTSTATUS(WINAPI* RtlGetVersionPtr)(PRTL_OSVERSIONINFOW);
 std::string GetWindowsVersion() {
@@ -61,57 +64,11 @@ std::string GetWindowsVersion() {
     return "Unable to determine Windows version";
 }
 
-extern "C" __declspec(dllexport) void ViewSerials() {
-    std::cout << "-- Motherboard --" << std::endl;
-    std::cout << "[Manufacturer] " << BaseBoardInformation.at(0) << std::endl;
-    std::cout << "[Product]      " << BaseBoardInformation.at(1) << std::endl;
-    std::cout << "[Serial]       " << BaseBoardInformation.at(2) << std::endl;
-    std::cout << "-- CPU --" << std::endl;
-    std::cout << HardwareInfo::GetCPU() << std::endl;
-    std::cout << "-- GPU --" << std::endl;
-    std::cout << HardwareInfo::GetGPU() << std::endl;
-    std::cout << "-- Mac Addresses --" << std::endl;
-    std::vector<std::string> MacAddresses = HardwareInfo::GetMacAddresses();
-    for (size_t i = 0; i < MacAddresses.size(); i++)
-        std::cout << "[" + std::to_string(i) + "] " + MacAddresses.at(i) << std::endl;
-    std::cout << "-- Memory --" << std::endl;
-    double totalMemory = HardwareInfo::GetTotalMemory() / 1024.0;
-    std::cout << "Total Memory Count: "
-        << std::fixed << std::setprecision(1)
-        << totalMemory << "GB" << std::endl;
-    std::cout << "-- Drives --" << std::endl;
-    std::vector<std::string> DriveSerials = HardwareInfo::GetDriveSerialNumbers();
-    for (size_t i = 0; i < DriveSerials.size(); i++)
-        std::cout << "[" + std::to_string(i) + "] " + DriveSerials.at(i) << std::endl;
-
-    SerialReader Reader(ReadSerials());
-
-    std::cout << "\n\033[1;35m[Exported Data] \033[1;37m\n\033[1;34m---------------------------\033[0m" << std::endl;
-    std::string value;
-
-    for (const auto& [name, value] : Reader.GetRows())
-        std::cout << Reader.FormatRow("[" + name + "]", value) << std::endl;
-}
-extern "C" __declspec(dllexport) void ViewSavedSerials() {
-    SerialReader Reader(EXText::decrypt(ReadFile(SERIALFILE), PASSWORD));
-    for (const auto& [name, value] : Reader.GetRows())
-        std::cout << Reader.FormatRow("[" + name + "]", value) << std::endl;
-}
-extern "C" __declspec(dllexport) void ViewExampleSerials() {
-    std::string data = "[Serial] 17267\n[Motherboard] B5000-Ligma\n[Manufacture] Ligma Inc\n[OS] Windows 10";
-    SerialReader reader(data);
-
-    std::string value;
-
-    for (const auto& [name, value] : reader.GetRows())
-        std::cout << reader.FormatRow("[" + name + "]", value) << std::endl;
-    std::cout << "\n\033[1;35m[Exported Data] \033[1;37m\n\033[1;34m-------------------------\033[0m" << std::endl;
-    std::cout << reader.Export() << std::endl;
-    return;
-}
 
 #pragma region Library
 extern "C" __declspec(dllexport) std::string ReadSavedSerials() {
+    if (!FileExists(SERIALFILE))
+        return "";
     try {
         std::string FileData = ReadFile(SERIALFILE);
         return EXText::decrypt(FileData, PASSWORD);
@@ -120,6 +77,8 @@ extern "C" __declspec(dllexport) std::string ReadSavedSerials() {
     return "";
 }
 extern "C" __declspec(dllexport) std::string ReadSavedSerial(const std::string& row) {
+    if (!FileExists(SERIALFILE))
+        return "";
     std::string RawSerials = ReadSavedSerials();
     if (RawSerials == "")
         return "";
@@ -169,7 +128,58 @@ extern "C" __declspec(dllexport) std::string ReadSerial(const std::string& row) 
     return value;
 }
 #pragma endregion
-#ifdef _DEBUG
+
+extern "C" __declspec(dllexport) void ViewSerials() {
+    GetBIOSInfo();
+    std::cout << "-- Motherboard --" << std::endl;
+    std::cout << "[Manufacturer] " << BaseBoardInformation.at(0) << std::endl;
+    std::cout << "[Product]      " << BaseBoardInformation.at(1) << std::endl;
+    std::cout << "[Serial]       " << BaseBoardInformation.at(2) << std::endl;
+    std::cout << "-- CPU --" << std::endl;
+    std::cout << HardwareInfo::GetCPU() << std::endl;
+    std::cout << "-- GPU --" << std::endl;
+    std::cout << HardwareInfo::GetGPU() << std::endl;
+    std::cout << "-- Mac Addresses --" << std::endl;
+    std::vector<std::string> MacAddresses = HardwareInfo::GetMacAddresses();
+    for (size_t i = 0; i < MacAddresses.size(); i++)
+        std::cout << "[" + std::to_string(i) + "] " + MacAddresses.at(i) << std::endl;
+    std::cout << "-- Memory --" << std::endl;
+    double totalMemory = HardwareInfo::GetTotalMemory() / 1024.0;
+    std::cout << "Total Memory Count: "
+        << std::fixed << std::setprecision(1)
+        << totalMemory << "GB" << std::endl;
+    std::cout << "-- Drives --" << std::endl;
+    std::vector<std::string> DriveSerials = HardwareInfo::GetDriveSerialNumbers();
+    for (size_t i = 0; i < DriveSerials.size(); i++)
+        std::cout << "[" + std::to_string(i) + "] " + DriveSerials.at(i) << std::endl;
+
+    SerialReader Reader(ReadSerials());
+
+    std::cout << "\n\033[1;35m[Exported Data] \033[1;37m\n\033[1;34m---------------------------\033[0m" << std::endl;
+    std::string value;
+
+    for (const auto& [name, value] : Reader.GetRows())
+        std::cout << Reader.FormatRow("[" + name + "]", value) << std::endl;
+}
+extern "C" __declspec(dllexport) void ViewSavedSerials() {
+    SerialReader Reader(EXText::decrypt(ReadFile(SERIALFILE), PASSWORD));
+    for (const auto& [name, value] : Reader.GetRows())
+        std::cout << Reader.FormatRow("[" + name + "]", value) << std::endl;
+}
+extern "C" __declspec(dllexport) void ViewExampleSerials() {
+    std::string data = "[Serial] 17267\n[Motherboard] B5000-Ligma\n[Manufacture] Ligma Inc\n[OS] Windows 10";
+    SerialReader reader(data);
+
+    std::string value;
+
+    for (const auto& [name, value] : reader.GetRows())
+        std::cout << reader.FormatRow("[" + name + "]", value) << std::endl;
+    std::cout << "\n\033[1;35m[Exported Data] \033[1;37m\n\033[1;34m-------------------------\033[0m" << std::endl;
+    std::cout << reader.Export() << std::endl;
+    return;
+}
+
+#ifdef TRUE
 extern "C" __declspec(dllexport) void Lib_Encrypt() {
     std::cout << "\033[1;36m[DEBUG MODE]\033[0m" << std::endl;
     try {
@@ -217,7 +227,7 @@ extern "C" __declspec(dllexport) void DebugUI() {
     std::map<int, std::function<void()>> functionMap;
 
     // Bind functions to the map
-    functionMap[1] = ViewSerials;
+    functionMap[1] = []() {ViewSerials(); WriteFile(SERIALFILE, EXText::encrypt(ReadSerials(), PASSWORD)); };
     functionMap[2] = ViewSavedSerials;
     functionMap[3] = ViewExampleSerials;
     functionMap[4] = Lib_Encrypt;
