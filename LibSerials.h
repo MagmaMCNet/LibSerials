@@ -32,10 +32,26 @@ EXPORTCPP const std::vector<std::string> HDD_Serials();
 EXPORT const std::string Baseboard_Manufacturer();
 EXPORT const std::string Baseboard_Product();
 EXPORT const std::string Baseboard_Serial();
-EXPORT const std::string BIOS_Serial();
-EXPORT const std::string SMBIOS_UUID();
+
+EXPORT const std::string BIOS_Vendor();
+EXPORT const std::string BIOS_Version();
+EXPORT const std::string BIOS_Date();
+
+EXPORT const std::string Chassis_Manufacturer();
+EXPORT const std::string Chassis_Version();
+EXPORT const std::string Chassis_Serial();
+
+EXPORT const std::string System_Manufacturer();
+EXPORT const std::string System_Product();
+EXPORT const std::string System_Version();
+EXPORT const std::string System_Serial();
+EXPORT const std::string System_SKU();
+EXPORT const std::string System_Family();
+EXPORT const std::string System_UUID();
+
 EXPORT const std::string CPU_Product();
 EXPORT const std::string CPU_Serial();
+
 EXPORTCPP const std::vector<std::string> MACAddress_List();
 EXPORT const std::string MACAddress_Main();
 
