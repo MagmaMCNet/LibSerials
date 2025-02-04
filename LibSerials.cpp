@@ -44,10 +44,10 @@ bool AttachConsole() {
 }
 
 EXPORT void Initilize() {
-    GetBIOSInfo();
+    HardwareInfo::InitilizeSMBIOS();
 }
 EXPORT void Free() {
-    FreeMemory();
+    HardwareInfo::FreeSMBIOS();
 }
 EXPORTCPP const std::vector<std::string> HDD_Serials() {
     auto HDDSerials = HardwareInfo::GetDriveSerialNumbers();
@@ -64,22 +64,58 @@ EXPORTCPP const std::vector<std::string> HDD_Serials() {
 
     return HDDSerials;
 }
-EXPORT const std::string Baseboard_Manufacturer() {
-    return String::ToASCII(BaseBoardInformation.size() > 0 ? BaseBoardInformation.at(0) : "N/A");
+EXPORT const std::string BIOS_Vendor() {
+    return String::ToASCII(HardwareInfo::BIOSInformation.size() > 0 ? HardwareInfo::BIOSInformation.at(0) : "N/A");
 }
-EXPORT const std::string Baseboard_Product() {
-    return String::ToASCII(BaseBoardInformation.size() > 1 ? BaseBoardInformation.at(1) : "N/A");
+EXPORT const std::string BIOS_Version() {
+    return String::ToASCII(HardwareInfo::BIOSInformation.size() > 1 ? HardwareInfo::BIOSInformation.at(1) : "1000");
 }
-EXPORT const std::string Baseboard_Serial() {
-    return String::ToASCII(BaseBoardInformation.size() > 2 ? BaseBoardInformation.at(2) : "N/A");
+EXPORT const std::string BIOS_Date() {
+    return String::ToASCII(HardwareInfo::BIOSInformation.size() > 2 ? HardwareInfo::BIOSInformation.at(2) : "01/01/2025");
 }
-EXPORT const std::string BIOS_Serial() {
-    std::string BIOSSerial = String::ToASCII(HardwareInfo::GetBiosSerialNumber());
-    return BIOSSerial.empty() ? "000000000000000" : BIOSSerial;
+
+EXPORT const std::string Chassis_Manufacturer() {
+    return String::ToASCII(HardwareInfo::ChassisInformation.size() > 0 ? HardwareInfo::ChassisInformation.at(0) : "N/A");
 }
-EXPORT const std::string SMBIOS_UUID() {
+EXPORT const std::string Chassis_Version() {
+    return String::ToASCII(HardwareInfo::ChassisInformation.size() > 2 ? HardwareInfo::ChassisInformation.at(2) : "N/A");
+}
+EXPORT const std::string Chassis_Serial() {
+    return String::ToASCII(HardwareInfo::ChassisInformation.size() > 3 ? HardwareInfo::ChassisInformation.at(3) : "N/A");
+}
+
+EXPORT const std::string System_Manufacturer() {
+    return String::ToASCII(HardwareInfo::SystemInformation.size() > 0 ? HardwareInfo::SystemInformation.at(0) : "N/A");
+}
+EXPORT const std::string System_Product() {
+    return String::ToASCII(HardwareInfo::SystemInformation.size() > 1 ? HardwareInfo::SystemInformation.at(1) : "N/A");
+}
+EXPORT const std::string System_Version() {
+    return String::ToASCII(HardwareInfo::SystemInformation.size() > 2 ? HardwareInfo::SystemInformation.at(2) : "N/A");
+}
+EXPORT const std::string System_Serial() {
+    return String::ToASCII(HardwareInfo::SystemInformation.size() > 3 ? HardwareInfo::SystemInformation.at(3) : "N/A");
+}
+EXPORT const std::string System_SKU() {
+    return String::ToASCII(HardwareInfo::SystemInformation.size() > 4 ? HardwareInfo::SystemInformation.at(4) : "N/A");
+}
+EXPORT const std::string System_Family() {
+    return String::ToASCII(HardwareInfo::SystemInformation.size() > 5 ? HardwareInfo::SystemInformation.at(5) : "N/A");
+}
+EXPORT const std::string System_UUID() {
     std::string BIOSSerial = String::ToASCII(HardwareInfo::GetSMBiosUUID());
     return BIOSSerial.empty() ? "0000-000-000-000-0000" : BIOSSerial;
+}
+
+EXPORT const std::string Baseboard_Manufacturer() {
+    return String::ToASCII(HardwareInfo::BaseBoardInformation.size() > 0 ? HardwareInfo::BaseBoardInformation.at(0) : "N/A");
+}
+EXPORT const std::string Baseboard_Product() {
+    return String::ToASCII(HardwareInfo::BaseBoardInformation.size() > 1 ? HardwareInfo::BaseBoardInformation.at(1) : "N/A");
+}
+EXPORT const std::string Baseboard_Serial() {
+    std::string Serial = String::ToASCII(HardwareInfo::GetBaseboardSerialNumber());
+    return Serial.empty() ? "000000000000000" : Serial;
 }
 EXPORT const std::string CPU_Product() {
     return String::Trim(HardwareInfo::GetCPU());
@@ -155,8 +191,8 @@ EXPORT void Component_SetPercentage(const Component item, const int value) {
 }
 EXPORT std::string System_HWID() {
     std::ostringstream hwid;
-    hwid << HashComponent(BIOS_Serial()) << ":"
-        << HashComponent(SMBIOS_UUID()) << ":"
+    hwid << HashComponent(Baseboard_Serial()) << ":"
+        << HashComponent(System_UUID()) << ":"
         << HashComponent(CPU_Serial()) << ":"
         << HashComponent(MACAddress_Main());
     return hwid.str();
@@ -196,24 +232,32 @@ EXPORT void Debug() {
     Initilize();
 
     std::vector<std::string> HDDSerials = HDD_Serials();
-    std::cout << String::Colorize("\n [!] SSD/HDD\n", "ff2a00", "ff8c00");
+    std::cout << String::Colorize(" [!] SSD/HDD\n", "ff2a00", "ff8c00");
     for (int i = 0; i < HDDSerials.size(); i++)
         std::cout << String::Colorize("[" + std::to_string(i) + "] ", "ff2a00", "ff8c00") + HDDSerials.at(i) + "\n";
 
-    std::cout << String::Colorize("\n [!] Motherboard\n", "ff7700", "62ff00");
-    std::cout << String::Colorize("[Manufacturer] ", "d68822", "ded418") + Baseboard_Manufacturer() + "\n";
-    std::cout << String::Colorize("[Product]      ", "d68822", "ded418") + Baseboard_Product() +"\n";
-    std::cout << String::Colorize("[Serial]       ", "d68822", "ded418") + Baseboard_Serial() + "\n\n";
+    std::cout << String::Colorize("\n [!] Motherboard\n", "ff8c00", "62ff00");
+    std::cout << String::Colorize("[Manufacturer] ", "ff8c00", "62ff00") + Baseboard_Manufacturer() + "\n";
+    std::cout << String::Colorize("[Product]      ", "ff8c00", "62ff00") + Baseboard_Product() + "\n";
+    std::cout << String::Colorize("[Serial]       ", "ff8c00", "62ff00") + Baseboard_Serial() + "\n\n";
 
     std::cout << String::Colorize(" [!] BIOS\n", "09ff00", "00eaff");
-    std::cout << BIOS_Serial() + "\n\n";
+    std::cout << String::Colorize("[Vendor]  ", "09ff00", "00eaff") + BIOS_Vendor() + "\n";
+    std::cout << String::Colorize("[Version] ", "09ff00", "00eaff") + BIOS_Version() + "\n\n";
 
-    std::cout << String::Colorize(" [!] SMBIOS\n", "00eaff", "0022ff");
-    std::cout << HardwareInfo::GetSMBiosUUID() + "\n";
+    std::cout << String::Colorize(" [!] System\n", "00eaff", "0022ff");
+    std::cout << String::Colorize("[Manufacturer] ", "00eaff", "0022ff") + System_Manufacturer() + "\n";
+    std::cout << String::Colorize("[UUID]         ", "00eaff", "0022ff") + System_UUID() + "\n";
+    std::cout << String::Colorize("[Family]       ", "00eaff", "0022ff") + System_Family() + "\n\n";
 
-    std::cout << String::Colorize("\n [!] CPU\n", "0022ff", "dd00ff");
-    std::cout << String::Colorize("[Name]   ", "ff00ea", "ff00ea") + CPU_Product() + "\n";
-    std::cout << String::Colorize("[Serial] ", "ff00ff", "e600ff") + CPU_Serial() + "\n\n";
+    std::cout << String::Colorize(" [!] Chassis\n", "6E11FF", "dd00ff");
+    std::cout << String::Colorize("[Manufacturer] ", "6E11FF", "dd00ff") + Chassis_Manufacturer() + "\n";
+    std::cout << String::Colorize("[Version]      ", "6E11FF", "dd00ff") + Chassis_Version() + "\n";
+    std::cout << String::Colorize("[Serial]       ", "6E11FF", "dd00ff") + Chassis_Serial() + "\n\n";
+
+    std::cout << String::Colorize(" [!] CPU\n", "dd00ff", "ff00ea");
+    std::cout << String::Colorize("[Name]   ", "dd00ff", "ff00ea") + CPU_Product() + "\n";
+    std::cout << String::Colorize("[Serial] ", "dd00ff", "e600ff") + CPU_Serial() + "\n\n";
 
     std::vector<std::string> MacAddresses = MACAddress_List();
     std::cout << String::Colorize(" [!] MAC Address\n", "e600ff", "ff0000");
@@ -221,12 +265,8 @@ EXPORT void Debug() {
         std::cout << String::Colorize("[" + std::to_string(i) + "] ", "f520c3", "fa202f") + MacAddresses.at(i) + "\n";
 
     std::string hwid = System_HWID();
-    std::cout << "Generated HWID: " << hwid << std::endl;
-
-    std::string savedID = "11EF3:D31BE:D30DD:895EB";
-    std::cout << "HWID Validation Result: " << (System_ValidateHWID(hwid.c_str()) ? "Valid" : "Invalid") << std::endl;
-    std::cout << "HWID Validation Result: " << (System_ValidateHWID(savedID.c_str()) ? "Valid" : "Invalid") << std::endl;
-
+    std::cout << String::Colorize("\n[*] HWID: " + hwid, "ff2a00", "ff8c00") << std::endl;
+    std::cout << String::Colorize("[*] github.com/MagmaMCNet/LibSerials", "2e2e2e") << std::endl;
     std::cin.ignore();
     FreeConsole();
     _exit(0);

@@ -284,7 +284,6 @@
   <ItemGroup>
     <ClCompile Include="HardwareInfo.cpp" />
     <ClCompile Include="LibSerials.cpp" />
-    <ClCompile Include="SMBIOS.cpp" />
     <ClCompile Include="StringUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
