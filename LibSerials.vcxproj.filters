@@ -15,16 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="EXText.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SerialReader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BLib.cpp">
+    <ClCompile Include="LibSerials.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="HardwareInfo.cpp">
@@ -33,30 +24,24 @@
     <ClCompile Include="SMBIOS.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="WCharHelper.cpp">
+    <ClCompile Include="StringUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="EXText.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SerialReader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BLib.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AssignedSerial.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SMBIOS.h">
+    <ClInclude Include="LibSerials.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HardwareInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WCharHelper.h">
+    <ClInclude Include="SMBIOS.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UtilityFunctions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StringUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

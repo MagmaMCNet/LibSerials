@@ -12,11 +12,14 @@
 #include <array>
 #include <intrin.h>
 #include "SMBIOS.h"
+
+/// Modified Version To Fix Memory Leak
 /// https://github.com/IntelSDM/AdvancedHardwareCollection/blob/master/UserModeHardwareCollection/SMBIOS.cpp
 std::vector<std::string> BaseBoardInformation;
 std::string BaseBoardSerial;
 std::vector<std::string> PhysicalMemoryInformation;
 std::vector<std::string> PhysicalMemorySerials;
+RawSMBIOSData* RawData;
 RawSMBIOSData* GetRawData()
 {
 	DWORD error = ERROR_SUCCESS;
@@ -88,40 +91,43 @@ std::vector<std::string> ConvertSMBIOSString(SMBIOSStruct* curStruct)
 }
 void GetPhysicalMemoryInformation(SMBIOSPhysicalMemory* curStruct, RawSMBIOSData* rawdata)
 {
-	std::vector<std::string> strings = ConvertSMBIOSString(curStruct);
+    auto strings = ConvertSMBIOSString(curStruct);
 
-	if ((int)curStruct->Size == 0)
-		return;
+    if (static_cast<int>(curStruct->Size) == 0)
+        return;
 
-	if (rawdata->SMBIOSMajorVersion < 2 || (rawdata->SMBIOSMajorVersion == 2 && rawdata->SMBIOSMinorVersion < 1))
-	{
-		return;
-	}
+    if (rawdata->SMBIOSMajorVersion < 2 || (rawdata->SMBIOSMajorVersion == 2 && rawdata->SMBIOSMinorVersion < 1))
+    {
+        return;
+    }
 
-	PhysicalMemoryInformation.push_back(std::to_string((int)curStruct->Size) + "mb");
-	PhysicalMemoryInformation.push_back(strings[curStruct->BankLocator]);
+    PhysicalMemoryInformation.emplace_back(std::to_string(static_cast<int>(curStruct->Size)) + "mb");
+    PhysicalMemoryInformation.emplace_back(strings.at(curStruct->BankLocator));
 
-	if (rawdata->SMBIOSMajorVersion == 2 && rawdata->SMBIOSMinorVersion < 3) {
-		std::cout << std::endl;
-		return;
-	}
-	PhysicalMemoryInformation.push_back(strings[curStruct->SerialNumber]);
-	PhysicalMemoryInformation.push_back(strings[curStruct->AssetTag]);
-	PhysicalMemorySerials.push_back(strings[curStruct->SerialNumber]);
-	PhysicalMemoryInformation.push_back("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); // just a seperator for visibility
+    if (rawdata->SMBIOSMajorVersion == 2 && rawdata->SMBIOSMinorVersion < 3) {
+        std::cout << std::endl;
+        return;
+    }
 
-	if (rawdata->SMBIOSMajorVersion == 2 && rawdata->SMBIOSMinorVersion < 6) {
-		return;
-	}
+    PhysicalMemoryInformation.emplace_back(strings.at(curStruct->SerialNumber));
+    PhysicalMemoryInformation.emplace_back(strings.at(curStruct->AssetTag));
+    PhysicalMemorySerials.emplace_back(strings.at(curStruct->SerialNumber));
+    PhysicalMemoryInformation.emplace_back("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"); // separator for visibility
+
+    if (rawdata->SMBIOSMajorVersion == 2 && rawdata->SMBIOSMinorVersion < 6) {
+        return;
+    }
 }
+
 void GetBaseBoardInformation(SMBIOSBaseBoard* curStruct, RawSMBIOSData* rawdata)
 {
-	std::vector<std::string> strings = ConvertSMBIOSString(curStruct);
-	BaseBoardSerial = strings[curStruct->SerialNumber] + strings[curStruct->Product];  // different products could have same serial number, just a better way to deal with this.
-	BaseBoardInformation.push_back(strings[curStruct->Manufacturer]);
-	BaseBoardInformation.push_back(strings[curStruct->Product]);
-	BaseBoardInformation.push_back(strings[curStruct->SerialNumber]);
+    auto strings = ConvertSMBIOSString(curStruct);
+    
+    BaseBoardSerial = strings.at(curStruct->SerialNumber) + strings.at(curStruct->Product);  // better concatenation to distinguish products.
 
+    BaseBoardInformation.emplace_back(strings.at(curStruct->Manufacturer));
+    BaseBoardInformation.emplace_back(strings.at(curStruct->Product));
+    BaseBoardInformation.emplace_back(strings.at(curStruct->SerialNumber));
 }
 void ConvertData(RawSMBIOSData* rawdata, int id)
 {
@@ -138,7 +144,18 @@ void ConvertData(RawSMBIOSData* rawdata, int id)
 }
 void GetBIOSInfo()
 {
-	std::vector<SMBIOSStruct*> structureTable = GetStructureTable(GetRawData());
+	RawData = GetRawData();
+	std::vector<SMBIOSStruct*> structureTable = GetStructureTable(RawData);
 	for (int i = 0; i < structureTable.size(); ++i)
-		ConvertData(GetRawData(), i);
+		ConvertData(RawData, i);
+}
+void FreeMemory() {
+	PhysicalMemoryInformation.clear();
+	PhysicalMemorySerials.clear();
+	BaseBoardInformation.clear();
+	BaseBoardSerial.clear();
+	PhysicalMemoryInformation.shrink_to_fit();
+	PhysicalMemorySerials.shrink_to_fit();
+	BaseBoardInformation.shrink_to_fit();
+	free(RawData);
 }
