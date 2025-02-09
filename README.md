@@ -2,8 +2,32 @@
 
 **Open Source Library Used For Getting System Information From SMBIOS Table**
 
-## Example Image Using `Debug();`
+### Current Supported Serials:
+- [x] HDD Serial Numbers
+- [x] BIOS Information
+- [x] System Information
+- [x] Baseboard Information
+- [x] Chassis Information
+- [x] CPU Serial Number
+- [x] MAC Addresses
+- [x] HWID String
+- [x] HWID Validation
+
+## Example Serials Using The Built in Debug UI
 ![image](https://github.com/user-attachments/assets/eb2cbab6-edcf-489e-b0a9-07dde9daaee8)
+
+## Example Usage
+```cpp
+void main() {
+    Initilize();
+    std::cout << " [!] Motherboard" << std::endl;
+    std::cout << "[Manufacturer] " << Baseboard_Manufacturer() << std::endl;
+    std::cout << "[Product]      " << Baseboard_Product() << std::endl;
+    std::cout << "[Serial]       " << Baseboard_Serial() << std::endl;
+    Free();
+    std::cin.ignore();
+}
+```
 
 ## Functions
 
