@@ -148,7 +148,7 @@ namespace HardwareInfo {
         }
     }
 
-    void InitilizeSMBIOS() {
+    void InitializeSMBIOS() {
         RawData = GetRawData();
         std::vector<SMBIOSStruct*> structureTable = GetStructureTable(RawData);
         for (int i = 0; i < structureTable.size(); ++i) {
@@ -174,7 +174,6 @@ namespace HardwareInfo {
         free(RawData);
     }
 
-    // already functionally implemtded functions cut off
     std::string GetCPU() {
         std::array<int, 4> integerbuffer;
         constexpr size_t sizeofintegerbuffer = sizeof(int) * integerbuffer.size();

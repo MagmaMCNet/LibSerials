@@ -24,8 +24,8 @@ enum class Component {
 #define EXPORTCPP extern "C++" __declspec(dllexport)
 
 // Library initialization and cleanup
-EXPORT void Initilize();
-EXPORT void Free();
+EXPORT void Initialize();
+EXPORT void FreeSerials();
 
 // Hardware information functions
 EXPORTCPP const std::vector<std::string> HDD_Serials();

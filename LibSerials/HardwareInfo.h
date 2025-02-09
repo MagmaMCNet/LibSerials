@@ -60,6 +60,6 @@ namespace HardwareInfo {
 	std::vector<std::string> GetDrivesLetters();
 	std::string GetVolumeSerialNumber(const std::string& volume);
 
-	void InitilizeSMBIOS();
+	void InitializeSMBIOS();
 	void FreeSMBIOS();
 };

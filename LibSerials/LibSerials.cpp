@@ -43,10 +43,10 @@ bool AttachConsole() {
     return true;
 }
 
-EXPORT void Initilize() {
-    HardwareInfo::InitilizeSMBIOS();
+EXPORT void Initialize() {
+    HardwareInfo::InitializeSMBIOS();
 }
-EXPORT void Free() {
+EXPORT void FreeSerials() {
     HardwareInfo::FreeSMBIOS();
 }
 EXPORTCPP const std::vector<std::string> HDD_Serials() {
@@ -229,7 +229,7 @@ EXPORT bool System_ValidateHWID(const char* SavedID) {
 #pragma region Debug
 EXPORT void Debug() {
     AttachConsole();
-    Initilize();
+    Initailize();
 
     std::vector<std::string> HDDSerials = HDD_Serials();
     std::cout << String::Colorize(" [!] SSD/HDD\n", "ff2a00", "ff8c00");

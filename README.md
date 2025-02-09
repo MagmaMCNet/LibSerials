@@ -19,12 +19,12 @@
 ## Example Usage
 ```cpp
 void main() {
-    Initilize();
+    Initialize();
     std::cout << " [!] Motherboard" << std::endl;
     std::cout << "[Manufacturer] " << Baseboard_Manufacturer() << std::endl;
     std::cout << "[Product]      " << Baseboard_Product() << std::endl;
     std::cout << "[Serial]       " << Baseboard_Serial() << std::endl;
-    Free();
+    FreeSerials();
     std::cin.ignore();
 }
 ```
