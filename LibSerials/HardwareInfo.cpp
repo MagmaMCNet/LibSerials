@@ -171,7 +171,11 @@ namespace HardwareInfo {
         SystemInformation.shrink_to_fit();
         ChassisInformation.shrink_to_fit();
         ProcessorInformation.shrink_to_fit();
-        free(RawData);
+        if (RawData) {
+            memset(RawData, 0, sizeof(RawSMBIOSData));
+            HeapFree(GetProcessHeap(), 0, RawData);
+            RawData = NULL;
+        }
     }
 
     std::string GetCPU() {
@@ -329,21 +333,23 @@ namespace HardwareInfo {
         std::vector<std::string> ret;
         DWORD buffer = 0;
 
-        if (GetAdaptersInfo(NULL, &buffer) == ERROR_BUFFER_OVERFLOW) {
+        if (GetAdaptersInfo(nullptr, &buffer) == ERROR_BUFFER_OVERFLOW) {
             PIP_ADAPTER_INFO adapterinfo = (PIP_ADAPTER_INFO)malloc(buffer);
 
             if (adapterinfo) {
                 if (GetAdaptersInfo(adapterinfo, &buffer) == ERROR_SUCCESS) {
                     PIP_ADAPTER_INFO pipadapterinfo = adapterinfo;
                     while (pipadapterinfo) {
-                        std::string mac;
-                        for (int i = 0; i < pipadapterinfo->AddressLength; i++) {
-                            char buffer[3];
-                            if (i > 0) mac += ":";
-                            sprintf_s(buffer, "%02X", pipadapterinfo->Address[i]);
-                            mac += buffer;
+                        if (pipadapterinfo->AddressLength > 0) {
+                            std::string mac;
+                            for (int i = 0; i < pipadapterinfo->AddressLength; i++) {
+                                char buffer[3];
+                                if (i > 0) mac += ":";
+                                sprintf_s(buffer, "%02X", pipadapterinfo->Address[i]);
+                                mac += buffer;
+                            }
+                            if (!mac.empty()) ret.push_back(mac);
                         }
-                        ret.push_back(mac);
                         pipadapterinfo = pipadapterinfo->Next;
                     }
                 }

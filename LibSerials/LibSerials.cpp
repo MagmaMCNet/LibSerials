@@ -43,7 +43,7 @@ bool AttachConsole() {
     return true;
 }
 
-EXPORT void Initialize() {
+EXPORT void InitializeSerials() {
     HardwareInfo::InitializeSMBIOS();
 }
 EXPORT void FreeSerials() {
@@ -229,7 +229,7 @@ EXPORT bool System_ValidateHWID(const char* SavedID) {
 #pragma region Debug
 EXPORT void Debug() {
     AttachConsole();
-    Initailize();
+    InitializeSerials();
 
     std::vector<std::string> HDDSerials = HDD_Serials();
     std::cout << String::Colorize(" [!] SSD/HDD\n", "ff2a00", "ff8c00");
@@ -267,6 +267,7 @@ EXPORT void Debug() {
     std::string hwid = System_HWID();
     std::cout << String::Colorize("\n[*] HWID: " + hwid, "ff2a00", "ff8c00") << std::endl;
     std::cout << String::Colorize("[*] github.com/MagmaMCNet/LibSerials", "2e2e2e") << std::endl;
+    FreeSerials();
     std::cin.ignore();
     FreeConsole();
     _exit(0);
